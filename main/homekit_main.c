@@ -2,61 +2,77 @@
 #define PASS "ShowMeTheWorld"
 #define LOGNAME "App"
 
-#include <simpleWifi.h>
+#include "./simpleWifi.h"
 #include <homekit.h>
 #include <homekit_fascade.h>
 
 #include <esp_system.h>
 #include <esp_log.h>
+#include <FreeRTOS.h>
+#include <semphr.h>
+#include <task.h>
+#include <driver/gpio.h>
 
-#define LED 19
-bool value = false;
+#define IO_PIR 21
+SemaphoreHandle_t guard = NULL;
+bool app_sth_is_moving = false;
+void *app_characteristic;
 
-
-void set_led(bool value)
+void *on_read()
 {
-    ESP_LOGI(LOGNAME, "Setting led: %d", value);
-    gpio_set_level(LED, value);
-    value = value;
+    return &app_sth_is_moving;
 }
 
-void on_light_write(void *data)
+void IRAM_ATTR on_isr(void *arg)
 {
-    value = *((bool *)data);
-    set_led(value);
+    xSemaphoreGiveFromISR(guard, NULL);
 }
 
-void on_light_identify()
+void motion_handler(void *args_ptr)
 {
-    ESP_LOGI(LOGNAME, "Identify was called");
-}
-
-void *on_light_read()
-{
-    return &value;
+    const TickType_t delay = 50;
+    for (;;)
+    {
+        if (!app_characteristic)
+        {
+            vTaskDelay(delay);
+        }
+        else if (xSemaphoreTake(guard, delay) == pdTRUE)
+        {
+            app_sth_is_moving = gpio_get_level(IO_PIR);
+            hk_notify(app_characteristic);
+        }
+    }
 }
 
 void on_wifi_initialized()
 {
     ESP_LOGI(LOGNAME, "Wifi initalized!");
-    hk_init("Elk", HK_CAT_SWITCH, "111-22-222", ESP_LOG_DEBUG);
+    hk_init("Mosquito", HK_CAT_SWITCH, "111-22-222", ESP_LOG_DEBUG);
     //hk_reset();
     hk_setup_start();
-    hk_setup_add_switch(
-        "My Switch", "Slompf Industries", "The one and only", "0000001", "0.1",
-        true, on_light_identify, on_light_read, on_light_write);
+    app_characteristic = hk_setup_add_motion_sensor(
+        "Mosquito", "Slompf Industries", "A motion sensor.", "0000001", "0.1",
+        true, on_read);
     hk_setup_finish();
+
+    //init worker task
+    vSemaphoreCreateBinary(guard);
+    xTaskCreate(motion_handler, "motion_handler", 3072, NULL, 10, NULL);
+
+    // init io
+    gpio_set_direction(IO_PIR, GPIO_MODE_INPUT);
+    gpio_set_intr_type(IO_PIR, GPIO_INTR_ANYEDGE);
+    gpio_install_isr_service(0);
+    gpio_isr_handler_add(IO_PIR, on_isr, (void *)IO_PIR);
 }
 
 void app_main()
 {
-    gpio_pad_select_gpio(LED);
-    gpio_set_direction(LED, GPIO_MODE_OUTPUT);
-    set_led(true);
-
     ESP_LOGI(LOGNAME, "SDK version:%s\n", esp_get_idf_version());
     ESP_LOGI(LOGNAME, "Starting");
 
+    // init wlan
     ESP_LOGD(LOGNAME, "Initializing wifi!\n");
     init_simple_wifi(SSID, PASS, on_wifi_initialized);
 }

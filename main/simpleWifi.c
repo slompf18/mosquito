@@ -11,7 +11,6 @@
 
 static esp_err_t event_handler(void *ctx, system_event_t *event)
 {
-    //todo: check on router off/on
     switch (event->event_id)
     {
     case SYSTEM_EVENT_STA_START:
