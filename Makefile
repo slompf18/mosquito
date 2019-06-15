@@ -3,9 +3,6 @@
 # project subdirectory.
 #
 
-PROJECT_NAME := homekit
+PROJECT_NAME := mosquito
 
 include $(IDF_PATH)/make/project.mk
-
-toll:
-	(cd test; make flash monitor)
