@@ -17,6 +17,7 @@
 SemaphoreHandle_t guard = NULL;
 bool app_sth_is_moving = false;
 void *app_characteristic;
+bool initialized = false;
 
 void *on_read()
 {
@@ -47,24 +48,28 @@ void motion_handler(void *args_ptr)
 
 void on_wifi_initialized()
 {
-    ESP_LOGI(LOGNAME, "Wifi initalized!");
-    hk_init("Mosquito", HK_CAT_SWITCH, "111-22-222", ESP_LOG_DEBUG);
-    //hk_reset();
-    hk_setup_start();
-    app_characteristic = hk_setup_add_motion_sensor(
-        "Mosquito", "Slompf Industries", "A motion sensor.", "0000001", "0.1",
-        true, on_read);
-    hk_setup_finish();
+    if(!initialized)
+    {
+        ESP_LOGI(LOGNAME, "Wifi initalized!");
+        hk_init("Mosquito", HK_CAT_SWITCH, "111-22-222", ESP_LOG_DEBUG);
+        //hk_reset();
+        hk_setup_start();
+        app_characteristic = hk_setup_add_motion_sensor(
+            "Mosquito", "Slompf Industries", "A motion sensor.", "0000001", "0.1",
+            true, on_read);
+        hk_setup_finish();
 
-    //init worker task
-    vSemaphoreCreateBinary(guard);
-    xTaskCreate(motion_handler, "motion_handler", 3072, NULL, 10, NULL);
+        //init worker task
+        vSemaphoreCreateBinary(guard);
+        xTaskCreate(motion_handler, "motion_handler", 3072, NULL, 10, NULL);
 
-    // init io
-    gpio_set_direction(IO_PIR, GPIO_MODE_INPUT);
-    gpio_set_intr_type(IO_PIR, GPIO_INTR_ANYEDGE);
-    gpio_install_isr_service(0);
-    gpio_isr_handler_add(IO_PIR, on_isr, (void *)IO_PIR);
+        // init io
+        gpio_set_direction(IO_PIR, GPIO_MODE_INPUT);
+        gpio_set_intr_type(IO_PIR, GPIO_INTR_ANYEDGE);
+        gpio_install_isr_service(0);
+        gpio_isr_handler_add(IO_PIR, on_isr, (void *)IO_PIR);
+            initialized = true;
+    }
 }
 
 void app_main()

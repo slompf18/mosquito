@@ -11,34 +11,39 @@
 
 static esp_err_t event_handler(void *ctx, system_event_t *event)
 {
+    //todo: check on router off/on
     switch (event->event_id)
     {
     case SYSTEM_EVENT_STA_START:
+        ESP_LOGD(LOG_NAME, "Wifi driver started, connecting to wifi.");
         esp_wifi_connect();
         break;
     case SYSTEM_EVENT_STA_GOT_IP:
-        ESP_LOGI(LOG_NAME, "Got ip: %s",
+        ESP_LOGD(LOG_NAME, "Wifi driver got ip: %s. Calling handler.",
                  ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip));
 
         SimpleWifiCallback cb = (SimpleWifiCallback)ctx;
         cb();
         break;
+    case SYSTEM_EVENT_STA_DISCONNECTED:
+        ESP_LOGD(LOG_NAME, "Wifi driver was disconnected. Reconnecting...");
+        esp_wifi_connect();
+        break;
+
     case SYSTEM_EVENT_AP_STACONNECTED:
-        ESP_LOGI(LOG_NAME, "Station:" MACSTR " join, AID=%d",
+        ESP_LOGD(LOG_NAME, "A station connected to our soft access point:" MACSTR " join, AID=%d",
                  MAC2STR(event->event_info.sta_connected.mac),
                  event->event_info.sta_connected.aid);
         break;
     case SYSTEM_EVENT_AP_STADISCONNECTED:
-        ESP_LOGI(LOG_NAME, "station:" MACSTR "leave, AID=%d",
+        ESP_LOGD(LOG_NAME, "A station disconnected from our soft access point:" MACSTR "leave, AID=%d",
                  MAC2STR(event->event_info.sta_disconnected.mac),
                  event->event_info.sta_disconnected.aid);
-        break;
-    case SYSTEM_EVENT_STA_DISCONNECTED:
-        esp_wifi_connect();
         break;
     default:
         break;
     }
+
     return ESP_OK;
 }
 
