@@ -15,7 +15,7 @@
 #define IO_PIR 21
 SemaphoreHandle_t guard = NULL;
 bool app_sth_is_moving = false;
-void *app_characteristic;
+void *app_chr;
 bool initialized = false;
 
 void *on_read()
@@ -33,14 +33,14 @@ void motion_handler(void *args_ptr)
     const TickType_t delay = 50;
     for (;;)
     {
-        if (!app_characteristic)
+        if (!app_chr)
         {
             vTaskDelay(delay);
         }
         else if (xSemaphoreTake(guard, delay) == pdTRUE)
         {
             app_sth_is_moving = gpio_get_level(IO_PIR);
-            hk_notify(app_characteristic);
+            hk_notify(app_chr);
         }
     }
 }
@@ -58,7 +58,7 @@ void app_main()
     ESP_ERROR_CHECK(ret);
 
     hk_setup_start();
-    app_characteristic = hk_setup_add_motion_sensor(
+    app_chr = hk_setup_add_motion_sensor(
         "Mosquito", "Slompf Industries", "A motion sensor.", "0000001", "0.1",
         true, on_read);
     hk_setup_finish();
