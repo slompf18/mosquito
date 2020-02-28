@@ -1,7 +1,7 @@
 #define LOGNAME "App"
 
-#include <homekit.h>
-#include <homekit_fascade.h>
+#include <hk.h>
+#include <hk_fascade.h>
 
 #include <esp_system.h>
 #include <esp_log.h>
