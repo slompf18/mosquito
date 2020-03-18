@@ -18,9 +18,9 @@ bool app_sth_is_moving = false;
 void *app_chr;
 bool initialized = false;
 
-void *on_read()
+void on_read(hk_mem* response)
 {
-    return &app_sth_is_moving;
+    hk_mem_append_buffer(response, &app_sth_is_moving, sizeof(bool));
 }
 
 void IRAM_ATTR on_isr(void *arg)
@@ -62,7 +62,7 @@ void app_main()
         "Mosquito", "Slompf Industries", "A motion sensor.", "0000001", "0.1",
         true, on_read);
     hk_setup_finish();
-    //hk_reset();
+    hk_reset();
 
     // init wlan
     ESP_LOGI(LOGNAME, "Wifi initalized!");
