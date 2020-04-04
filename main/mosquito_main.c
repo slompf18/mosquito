@@ -18,9 +18,24 @@ bool app_sth_is_moving = false;
 void *app_chr;
 bool initialized = false;
 
-void on_read(hk_mem* response)
+void on_identify()
 {
+    ESP_LOGI(LOGNAME, "Identify");
+}
+
+esp_err_t on_write(hk_mem* request, hk_mem* response)
+{
+    ESP_LOGI(LOGNAME, "Write");
+    app_sth_is_moving = *(bool*)request->ptr;
+    ESP_LOGI(LOGNAME, "Write: %d", app_sth_is_moving);
+    return ESP_OK;
+}
+
+esp_err_t on_read(hk_mem* response)
+{
+    ESP_LOGI(LOGNAME, "Read");
     hk_mem_append_buffer(response, &app_sth_is_moving, sizeof(bool));
+    return ESP_OK;
 }
 
 void IRAM_ATTR on_isr(void *arg)
@@ -58,9 +73,11 @@ void app_main()
     ESP_ERROR_CHECK(ret);
 
     hk_setup_start();
-    app_chr = hk_setup_add_motion_sensor(
-        "Mosquito", "Slompf Industries", "A motion sensor.", "0000001", "0.1",
-        true, on_read);
+    app_chr = hk_setup_add_switch("Mosquito", "Slompf Industries", "A switch.", "0000001", "0.2",
+        true, on_identify, on_read, on_write);
+    // app_chr = hk_setup_add_motion_sensor(
+    //     "Mosquito", "Slompf Industries", "A motion sensor.", "0000001", "0.1",
+    //     true, on_read);
     hk_setup_finish();
     hk_reset();
 
