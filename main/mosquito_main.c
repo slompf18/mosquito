@@ -23,7 +23,7 @@ void on_identify()
     ESP_LOGI(LOGNAME, "Identify");
 }
 
-esp_err_t on_write(hk_mem* request, hk_mem* response)
+esp_err_t on_write(hk_mem* request)
 {
     ESP_LOGI(LOGNAME, "Write");
     app_sth_is_moving = *(bool*)request->ptr;
