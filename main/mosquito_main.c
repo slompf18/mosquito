@@ -83,7 +83,7 @@ void app_main()
 
     // init wlan
     ESP_LOGI(LOGNAME, "Wifi initalized!");
-    hk_init("Bla", HK_CAT_OTHER, "111-22-222");
+    hk_init("Blu", HK_CAT_OTHER, "111-22-222");
     
     //init worker task
     vSemaphoreCreateBinary(guard);
