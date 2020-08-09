@@ -81,7 +81,7 @@ void app_main()
     //hk_reset();
 
     // init wlan
-    hk_init("Blu", HK_CAT_OTHER, "111-22-222");
+    hk_init("Mosquito", HK_CAT_OTHER, "111-22-222");
 
     //init worker task
     vSemaphoreCreateBinary(guard);
