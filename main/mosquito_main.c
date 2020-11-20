@@ -75,10 +75,10 @@ void app_main()
     // app_chr = hk_setup_add_switch("Mosquito", "Slompf Industries", "A switch.", "0000001", "0.2",
     //                               on_identify, on_read, on_write);
     app_chr = hk_setup_add_motion_sensor(
-        "Mosquito", "Slompf Industries", "A motion sensor.", "0000001", "0.2.15",
+        "Mosquito", "Slompf Industries", "A motion sensor.", "0000001", "0.2.16",
         on_identify, on_read);
 
-    //hk_reset();
+    // hk_reset();
 
     // init wlan
     hk_init("Mosquito", HK_CAT_OTHER, "111-22-222");
