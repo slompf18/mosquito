@@ -25,16 +25,14 @@ void on_identify()
 
 esp_err_t on_write(hk_mem *request)
 {
-    ESP_LOGI(LOGNAME, "Write\n");
     app_sth_is_moving = *(bool *)request->ptr;
-    ESP_LOGI(LOGNAME, "Write: %d\n", app_sth_is_moving);
+    ESP_LOGD(LOGNAME, "Write: %d\n", app_sth_is_moving);
     return ESP_OK;
 }
 
 esp_err_t on_read(hk_mem *response)
 {
-    ESP_LOGI(LOGNAME, "Read: %d", app_sth_is_moving);
-    ESP_LOGD(LOGNAME, "Sizeof bool: %d", sizeof(bool));
+    ESP_LOGD(LOGNAME, "Read: %d", app_sth_is_moving);
     hk_mem_append_buffer(response, &app_sth_is_moving, sizeof(bool));
     return ESP_OK;
 }
@@ -72,21 +70,18 @@ void app_main()
     ESP_LOGI(LOGNAME, "SDK version:%s\n", esp_get_idf_version());
     ESP_LOGI(LOGNAME, "Starting\n");
 
-    // app_chr = hk_setup_add_switch("Mosquito", "Slompf Industries", "A switch.", "0000001", "0.2",
-    //                               on_identify, on_read, on_write);
+    // init homekit
     hk_setup_add_motion_sensor(
-        "Mosquito", "Slompf Industries", "A motion sensor.", "0000001", "0.2.17",
+        "MotionSensor", "Slompf Industries", "A motion sensor.", "0000001", "0.2.17",
         on_identify, on_read, &app_chr);
-
     // hk_reset();
+    hk_init("Mosquito", HK_CAT_SENSOR, "111-22-222");
 
-    // init wlan
-    hk_init("Mosquito", HK_CAT_OTHER, "111-22-222");
-
-    //init worker task
+    // init worker task
     vSemaphoreCreateBinary(guard);
     xTaskCreate(motion_handler, "motion_handler", 3072, NULL, 10, NULL);
 
+    // init io config
     gpio_config_t io_conf;
     io_conf.intr_type = GPIO_INTR_ANYEDGE;
     io_conf.pin_bit_mask = 1ULL << IO_PIR;
